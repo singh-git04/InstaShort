@@ -46,7 +46,7 @@ authRoute.post("/register",async(req,res)=>{
      })
 })
 
-
+/* Get me /api/auth/get-me */
 authRoute.get("/get-me",async(req,res)=>{
    const token = req.cookies.token
 
@@ -59,9 +59,39 @@ authRoute.get("/get-me",async(req,res)=>{
       email: user.email
       
    })
-   
+ 
+})
 
-    
+/* Login /api/auth/login */
+authRoute.post("/login",async(req,res)=>{
+   const {email, password} = req.body
+
+   const user = await userModel.findOne({email})
+   console.log(user)
+   if(!user){
+      return res.status(401).json({
+         message: "not Credential"
+      })
+   }
+      const hash = crypto.createHash("SHA-256").update(password).digest("hex")  
+      const isPassword = hash === user.password
+      
+     
+   if(!isPassword){
+      return res.status(401).json({
+         message: "Invalid Credential"
+      })
+   }
+
+   const token = jwt.sign({id: user._id},process.env.JWT_SECRET,{expiresIn:'1d'})
+   console.log(token)
+   console.log(res.cookie("token", token))
+
+   return res.status(200).json({
+      message: "Login Successful",
+      user
+   })
+
 })
 
 module.exports = authRoute
